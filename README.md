@@ -32,6 +32,7 @@ python src/vibevoice/cli.py
 - CUDA 12.x
 - cuBLAS
 - cuDNN 9.x
+- In case you get this error: `OSError: PortAudio library not found` run `sudo apt install libportaudio2`
 
 #### Handling the CUDA requirements
 
@@ -54,7 +55,7 @@ sudo apt install cuda-toolkit-12-8
 
 1. Start the application:
 ```bash
-vibevoice
+python src/vibevoice/cli.py
 ```
 
 2. Hold down right control key (Ctrl_r) while speaking
@@ -65,7 +66,7 @@ vibevoice
 
 You can customize the trigger key by setting the `VOICEKEY` environment variable:
 ```bash
-export VOICEKEY="ctrl_l"  # Use left control instead
+export VOICEKEY="ctrl"  # Use left control instead
 ```
 
 ## Credits 🙏
