@@ -21,7 +21,7 @@ def health_check():
 @app.post("/transcribe/")
 async def transcribe(request: TranscribeRequest):
     segments, info = model.transcribe(request.file_path)
-    text = " ".join([segment.text for segment in segments])
+    text = " ".join([segment.text.strip() for segment in segments])
     return {"text": text}
 
 def run_server():
