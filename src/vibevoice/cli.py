@@ -8,6 +8,16 @@ import sounddevice as sd
 import numpy as np
 import requests
 import sys
+import base64
+
+SCREENSHOT_AVAILABLE = False
+try:
+    import pyautogui
+    from PIL import Image
+    SCREENSHOT_AVAILABLE = True
+except ImportError as e:
+    print(f"Screenshot functionality not available: {e}")
+    print("Install Pillow with: pip install Pillow")
 
 from pynput.keyboard import Controller as KeyboardController, Key, Listener, KeyCode
 from scipy.io import wavfile
@@ -34,6 +44,37 @@ def wait_for_server(timeout=1800, interval=0.5):
         time.sleep(interval)
     raise TimeoutError("Server failed to start within timeout")
 
+def capture_screenshot():
+    """Capture a screenshot, save it, and return the path and base64 data."""
+    if not SCREENSHOT_AVAILABLE:
+        print("Screenshot functionality not available. Install Pillow with: pip install Pillow")
+        return None, None
+        
+    try:
+        screenshot_path = os.path.abspath('screenshot.png')
+        print(f"Capturing screenshot to: {screenshot_path}")
+        
+        screenshot = pyautogui.screenshot()
+        
+        max_width = int(os.getenv('SCREENSHOT_MAX_WIDTH', '1024'))
+        width, height = screenshot.size
+        
+        if width > max_width:
+            ratio = max_width / width
+            new_width = max_width
+            new_height = int(height * ratio)
+            screenshot = screenshot.resize((new_width, new_height))
+        
+        screenshot.save(screenshot_path)
+        
+        with open(screenshot_path, "rb") as image_file:
+            base64_data = base64.b64encode(image_file.read()).decode('utf-8')
+        
+        return screenshot_path, base64_data
+    except Exception as e:
+        print(f"Error capturing screenshot: {e}")
+        return None, None
+
 def _process_llm_cmd(keyboard_controller, transcript):
     """Process transcript with Ollama and type the response."""
 
@@ -41,14 +82,43 @@ def _process_llm_cmd(keyboard_controller, transcript):
         loading_indicator.show(message=f"Processing: {transcript}")
         
         model = os.getenv('OLLAMA_MODEL', 'gemma3:27b')
+        include_screenshot = os.getenv('INCLUDE_SCREENSHOT', 'true').lower() == 'true'
         
-        url = "http://localhost:11434/api/generate"
-        payload = {
-            "model": model,
-            "prompt": transcript.lower().strip(),
-            "stream": True
-        }
-
+        screenshot_path, screenshot_base64 = (None, None)
+        if include_screenshot and SCREENSHOT_AVAILABLE:
+            screenshot_path, screenshot_base64 = capture_screenshot()
+        
+        user_prompt = transcript.strip()
+        
+        system_prompt = """You are a voice-controlled AI assistant. The user is talking to their computer using voice commands.
+Your responses will be directly typed into the user's keyboard at their cursor position, so:
+1. Be concise and to the point, but friendly and engaging - prefer shorter answers
+2. Focus on answering the specific question or request
+3. Don't use introductory phrases like "Here's..." or "Based on the screenshot..."
+4. Don't include formatting like bullet points, which might look strange when typed
+5. If you see a screenshot, analyze it and use it to inform your response
+6. Never apologize for limitations or explain what you're doing"""
+        
+        if screenshot_base64:
+            url = "http://localhost:11434/api/generate"
+            payload = {
+                "model": model,
+                "prompt": user_prompt,
+                "system": system_prompt,
+                "stream": True,
+                "images": [screenshot_base64]  # Pass base64 data directly without data URI prefix
+            }
+            print(f"Sending request with screenshot to model: {model}")
+        else:
+            url = "http://localhost:11434/api/generate"
+            payload = {
+                "model": model,
+                "prompt": user_prompt,
+                "system": system_prompt,
+                "stream": True
+            }
+            print(f"Sending text-only request")
+        
         response = requests.post(url, json=payload, stream=True)
         response.raise_for_status()
         
@@ -59,13 +129,11 @@ def _process_llm_cmd(keyboard_controller, transcript):
                     chunk = json.loads(data)
                     if 'response' in chunk:
                         keyboard_controller.type(chunk['response'])
-                        
                         loading_indicator.hide()
         
         return "Successfully processed with Ollama"
     except requests.exceptions.RequestException as e:
         print(f"Error calling Ollama: {e}")
-        return "Error processing command"
     finally:
         loading_indicator.hide()
 
