@@ -72,8 +72,10 @@ def _process_llm_cmd(keyboard_controller, transcript):
 def main():
     load_dotenv()
     key_label = os.environ.get("VOICEKEY", "ctrl_r")
+    cmd_label = os.environ.get("VOICEKEY_CMD", "scroll_lock")
     RECORD_KEY = Key[key_label]
-    CMD_KEY = KeyCode(vk=65027)
+    CMD_KEY = Key[cmd_label]
+#    CMD_KEY = KeyCode(vk=65027)  # This is how you can use non-standard keys, this is AltGr for me
 
     recording = False
     audio_data = []
@@ -82,7 +84,7 @@ def main():
 
     def on_press(key):
         nonlocal recording, audio_data
-        if key == RECORD_KEY or key == CMD_KEY:
+        if key == RECORD_KEY or key == CMD_KEY and not recording:
             recording = True
             audio_data = []
             print("Listening...")
