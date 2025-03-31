@@ -5,6 +5,8 @@ I hope you have fun with it!
 
 ## What it does 🚀
 
+![Demo Video](docs/vibevoice-demo-caption.gif)
+
 Simply run `cli.py` and start dictating text anywhere in your system:
 1. Hold down right control key (Ctrl_r)
 2. Speak your text
