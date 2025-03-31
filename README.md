@@ -33,6 +33,18 @@ python src/vibevoice/cli.py
 - cuBLAS
 - cuDNN 9.x
 - In case you get this error: `OSError: PortAudio library not found` run `sudo apt install libportaudio2`
+- [Ollama](https://ollama.com) for AI command mode (with multimodal models for screenshot support)
+
+#### Setting up Ollama
+1. Install Ollama by following the instructions at [ollama.com](https://ollama.com)
+2. Pull a model that supports both text and images for best results:
+   ```bash
+   ollama pull gemma3:27b  # Great model which can run on RTX 3090 or similar
+   ```
+3. Make sure Ollama is running in the background:
+   ```bash
+   ollama serve
+   ```
 
 #### Handling the CUDA requirements
 
@@ -72,10 +84,53 @@ python src/vibevoice/cli.py
 
 ### Configuration
 
-You can customize the trigger key by setting the `VOICEKEY` environment variable:
+You can customize various aspects of VibeVoice with the following environment variables:
+
+#### Keyboard Controls
+- `VOICEKEY`: Change the dictation activation key (default: "ctrl_r")
+  ```bash
+  export VOICEKEY="ctrl"  # Use left control instead
+  ```
+- `VOICEKEY_CMD`: Set the key for AI command mode (default: "scroll_lock")
+  ```bash
+  export VOICEKEY_CMD="ctsl"  # Use left control instead of Scroll Lock key
+  ```
+
+#### AI and Screenshot Features
+- `OLLAMA_MODEL`: Specify which Ollama model to use (default: "gemma3:27b")
+  ```bash
+  export OLLAMA_MODEL="gemma3:4b"  # Use a smaller VLM in case you have less GPU RAM
+  ```
+- `INCLUDE_SCREENSHOT`: Enable or disable screenshots in AI command mode (default: "true")
+  ```bash
+  export INCLUDE_SCREENSHOT="false"  # Disable screenshots (but they are local only anyways)
+  ```
+- `SCREENSHOT_MAX_WIDTH`: Set the maximum width for screenshots (default: "1024")
+  ```bash
+  export SCREENSHOT_MAX_WIDTH="800"  # Smaller screenshots
+  ```
+
+#### Screenshot Dependencies
+To use the screenshot functionality:
 ```bash
-export VOICEKEY="ctrl"  # Use left control instead
+sudo apt install gnome-screenshot
 ```
+
+## Usage Modes 💡
+
+VibeVoice supports two modes:
+
+### 1. Dictation Mode
+1. Hold down the dictation key (default: right Control)
+2. Speak your text
+3. Release to transcribe
+4. Your text appears wherever your cursor is!
+
+### 2. AI Command Mode
+1. Hold down the command key (default: Scroll Lock)
+2. Ask a question or give a command
+3. Release the key
+4. The AI will analyze your request (and current screen if enabled) and type a response
 
 ## Credits 🙏
 

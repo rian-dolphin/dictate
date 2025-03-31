@@ -3,13 +3,29 @@
 import os
 import subprocess
 import time
-from dotenv import load_dotenv
+import json
 import sounddevice as sd
 import numpy as np
 import requests
-from pynput.keyboard import Controller as KeyboardController, Key, Listener
-from scipy.io import wavfile
 import sys
+import base64
+
+SCREENSHOT_AVAILABLE = False
+try:
+    import pyautogui
+    from PIL import Image
+    SCREENSHOT_AVAILABLE = True
+except ImportError as e:
+    print(f"Screenshot functionality not available: {e}")
+    print("Install Pillow with: pip install Pillow")
+
+from pynput.keyboard import Controller as KeyboardController, Key, Listener, KeyCode
+from scipy.io import wavfile
+from dotenv import load_dotenv
+
+from loading_indicator import LoadingIndicator
+
+loading_indicator = LoadingIndicator()
 
 def start_whisper_server():
     server_script = os.path.join(os.path.dirname(__file__), 'server.py')
@@ -28,10 +44,106 @@ def wait_for_server(timeout=1800, interval=0.5):
         time.sleep(interval)
     raise TimeoutError("Server failed to start within timeout")
 
+def capture_screenshot():
+    """Capture a screenshot, save it, and return the path and base64 data."""
+    if not SCREENSHOT_AVAILABLE:
+        print("Screenshot functionality not available. Install Pillow with: pip install Pillow")
+        return None, None
+        
+    try:
+        screenshot_path = os.path.abspath('screenshot.png')
+        print(f"Capturing screenshot to: {screenshot_path}")
+        
+        screenshot = pyautogui.screenshot()
+        
+        max_width = int(os.getenv('SCREENSHOT_MAX_WIDTH', '1024'))
+        width, height = screenshot.size
+        
+        if width > max_width:
+            ratio = max_width / width
+            new_width = max_width
+            new_height = int(height * ratio)
+            screenshot = screenshot.resize((new_width, new_height))
+        
+        screenshot.save(screenshot_path)
+        
+        with open(screenshot_path, "rb") as image_file:
+            base64_data = base64.b64encode(image_file.read()).decode('utf-8')
+        
+        return screenshot_path, base64_data
+    except Exception as e:
+        print(f"Error capturing screenshot: {e}")
+        return None, None
+
+def _process_llm_cmd(keyboard_controller, transcript):
+    """Process transcript with Ollama and type the response."""
+
+    try:
+        loading_indicator.show(message=f"Processing: {transcript}")
+        
+        model = os.getenv('OLLAMA_MODEL', 'gemma3:27b')
+        include_screenshot = os.getenv('INCLUDE_SCREENSHOT', 'true').lower() == 'true'
+        
+        screenshot_path, screenshot_base64 = (None, None)
+        if include_screenshot and SCREENSHOT_AVAILABLE:
+            screenshot_path, screenshot_base64 = capture_screenshot()
+        
+        user_prompt = transcript.strip()
+        
+        system_prompt = """You are a voice-controlled AI assistant. The user is talking to their computer using voice commands.
+Your responses will be directly typed into the user's keyboard at their cursor position, so:
+1. Be concise and to the point, but friendly and engaging - prefer shorter answers
+2. Focus on answering the specific question or request
+3. Don't use introductory phrases like "Here's..." or "Based on the screenshot..."
+4. Don't include formatting like bullet points, which might look strange when typed
+5. If you see a screenshot, analyze it and use it to inform your response
+6. Never apologize for limitations or explain what you're doing"""
+        
+        if screenshot_base64:
+            url = "http://localhost:11434/api/generate"
+            payload = {
+                "model": model,
+                "prompt": user_prompt,
+                "system": system_prompt,
+                "stream": True,
+                "images": [screenshot_base64]  # Pass base64 data directly without data URI prefix
+            }
+            print(f"Sending request with screenshot to model: {model}")
+        else:
+            url = "http://localhost:11434/api/generate"
+            payload = {
+                "model": model,
+                "prompt": user_prompt,
+                "system": system_prompt,
+                "stream": True
+            }
+            print(f"Sending text-only request")
+        
+        response = requests.post(url, json=payload, stream=True)
+        response.raise_for_status()
+        
+        for line in response.iter_lines():
+            if line:
+                data = line.decode('utf-8')
+                if data.startswith('{'):
+                    chunk = json.loads(data)
+                    if 'response' in chunk:
+                        keyboard_controller.type(chunk['response'])
+                        loading_indicator.hide()
+        
+        return "Successfully processed with Ollama"
+    except requests.exceptions.RequestException as e:
+        print(f"Error calling Ollama: {e}")
+    finally:
+        loading_indicator.hide()
+
 def main():
     load_dotenv()
     key_label = os.environ.get("VOICEKEY", "ctrl_r")
+    cmd_label = os.environ.get("VOICEKEY_CMD", "scroll_lock")
     RECORD_KEY = Key[key_label]
+    CMD_KEY = Key[cmd_label]
+#    CMD_KEY = KeyCode(vk=65027)  # This is how you can use non-standard keys, this is AltGr for me
 
     recording = False
     audio_data = []
@@ -40,14 +152,14 @@ def main():
 
     def on_press(key):
         nonlocal recording, audio_data
-        if key == RECORD_KEY:
+        if key == RECORD_KEY or key == CMD_KEY and not recording:
             recording = True
             audio_data = []
             print("Listening...")
 
     def on_release(key):
         nonlocal recording, audio_data
-        if key == RECORD_KEY:
+        if key == RECORD_KEY or key == CMD_KEY:
             recording = False
             print("Transcribing...")
             
@@ -67,10 +179,12 @@ def main():
                 response.raise_for_status()
                 transcript = response.json()['text']
                 
-                if transcript:
+                if transcript and key == RECORD_KEY:
                     processed_transcript = transcript + " "
                     print(processed_transcript)
                     keyboard_controller.type(processed_transcript)
+                elif transcript and key == CMD_KEY:
+                    _process_llm_cmd(keyboard_controller, transcript)
             except requests.exceptions.RequestException as e:
                 print(f"Error sending request to local API: {e}")
             except Exception as e:
