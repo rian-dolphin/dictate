@@ -128,7 +128,14 @@ Your responses will be directly typed into the user's keyboard at their cursor p
                 if data.startswith('{'):
                     chunk = json.loads(data)
                     if 'response' in chunk:
-                        keyboard_controller.type(chunk['response'])
+                        chunk_text = chunk['response']
+                        print(f"Debug - received chunk: {repr(chunk_text)}")
+                        
+                        # Replace smart/curly quotes with standard apostrophes
+                        # U+2018 (') and U+2019 (') are both replaced with standard apostrophe (')
+                        normalized_text = chunk_text.replace('\u2019', "'").replace('\u2018', "'")
+                        
+                        keyboard_controller.type(normalized_text)
                         loading_indicator.hide()
         
         return "Successfully processed with Ollama"
