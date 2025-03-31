@@ -3,13 +3,19 @@
 import os
 import subprocess
 import time
-from dotenv import load_dotenv
+import json
 import sounddevice as sd
 import numpy as np
 import requests
-from pynput.keyboard import Controller as KeyboardController, Key, Listener
-from scipy.io import wavfile
 import sys
+
+from pynput.keyboard import Controller as KeyboardController, Key, Listener, KeyCode
+from scipy.io import wavfile
+from dotenv import load_dotenv
+
+from loading_indicator import LoadingIndicator
+
+loading_indicator = LoadingIndicator()
 
 def start_whisper_server():
     server_script = os.path.join(os.path.dirname(__file__), 'server.py')
@@ -28,10 +34,46 @@ def wait_for_server(timeout=1800, interval=0.5):
         time.sleep(interval)
     raise TimeoutError("Server failed to start within timeout")
 
+def _process_llm_cmd(keyboard_controller, transcript):
+    """Process transcript with Ollama and type the response."""
+
+    try:
+        loading_indicator.show(message=f"Processing: {transcript}")
+        
+        model = os.getenv('OLLAMA_MODEL', 'gemma3:27b')
+        
+        url = "http://localhost:11434/api/generate"
+        payload = {
+            "model": model,
+            "prompt": transcript.lower().strip(),
+            "stream": True
+        }
+
+        response = requests.post(url, json=payload, stream=True)
+        response.raise_for_status()
+        
+        for line in response.iter_lines():
+            if line:
+                data = line.decode('utf-8')
+                if data.startswith('{'):
+                    chunk = json.loads(data)
+                    if 'response' in chunk:
+                        keyboard_controller.type(chunk['response'])
+                        
+                        loading_indicator.hide()
+        
+        return "Successfully processed with Ollama"
+    except requests.exceptions.RequestException as e:
+        print(f"Error calling Ollama: {e}")
+        return "Error processing command"
+    finally:
+        loading_indicator.hide()
+
 def main():
     load_dotenv()
     key_label = os.environ.get("VOICEKEY", "ctrl_r")
     RECORD_KEY = Key[key_label]
+    CMD_KEY = KeyCode(vk=65027)
 
     recording = False
     audio_data = []
@@ -40,14 +82,14 @@ def main():
 
     def on_press(key):
         nonlocal recording, audio_data
-        if key == RECORD_KEY:
+        if key == RECORD_KEY or key == CMD_KEY:
             recording = True
             audio_data = []
             print("Listening...")
 
     def on_release(key):
         nonlocal recording, audio_data
-        if key == RECORD_KEY:
+        if key == RECORD_KEY or key == CMD_KEY:
             recording = False
             print("Transcribing...")
             
@@ -67,10 +109,12 @@ def main():
                 response.raise_for_status()
                 transcript = response.json()['text']
                 
-                if transcript:
+                if transcript and key == RECORD_KEY:
                     processed_transcript = transcript + " "
                     print(processed_transcript)
                     keyboard_controller.type(processed_transcript)
+                elif transcript and key == CMD_KEY:
+                    _process_llm_cmd(keyboard_controller, transcript)
             except requests.exceptions.RequestException as e:
                 print(f"Error sending request to local API: {e}")
             except Exception as e:
