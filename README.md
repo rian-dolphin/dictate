@@ -13,6 +13,15 @@ Simply run `cli.py` and start dictating text anywhere in your system:
 
 Works in any application or window - your text editor, browser, chat apps, anywhere you can type!
 
+NEW: LLM voice command mode:
+
+1. Hold down the scroll_lock key (I think it's normally not used anymore that's why I chose it)
+2. Speak what you want the LLM to do
+3. The LLM receives your transcribed text and a screenshot of your current view
+4. The LLM answer is typed into your keyboard (streamed)
+
+Works everywhere on your system and the LLM always has the screen context
+
 ## Installation 🛠️
 
 ```bash
