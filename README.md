@@ -43,7 +43,6 @@ python src/vibevoice/cli.py
 - CUDA 12.x
 - cuBLAS
 - cuDNN 9.x
-- In case you get this error: `OSError: PortAudio library not found` run `sudo apt install libportaudio2`
 - [Ollama](https://ollama.com) for AI command mode
 
 #### Setting up Ollama
@@ -57,30 +56,10 @@ python src/vibevoice/cli.py
    ollama serve
    ```
 
-#### Handling the CUDA requirements
+#### macOS Requirements
 
-* Make sure that you have CUDA >= 12.4 and cuDNN >= 9.x
-* I had some trouble at first with Ubuntu 24.04, so I did the following:
-
-```bash
-sudo apt update && sudo apt upgrade
-sudo apt autoremove nvidia* --purge
-ubuntu-drivers devices
-sudo ubuntu-drivers autoinstall
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb && sudo apt update
-sudo apt install cuda-toolkit-12-8
-```
-or alternatively:
-
-``` 
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
-sudo apt update
-sudo apt install cudnn9-cuda-12
-```
-
-* Then after rebooting, it worked well.
+* CUDA-capable GPU recommended for best performance
+* For CPU-only mode, modify server.py accordingly
 
 ## Usage 💡
 

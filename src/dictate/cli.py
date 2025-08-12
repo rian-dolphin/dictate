@@ -12,12 +12,10 @@ import sounddevice as sd
 
 
 from dotenv import load_dotenv
-from loading_indicator import LoadingIndicator
 from pynput.keyboard import Controller as KeyboardController
 from pynput.keyboard import Key, Listener
 from scipy.io import wavfile
 
-loading_indicator = LoadingIndicator()
 
 
 def start_whisper_server():
@@ -45,7 +43,7 @@ def _process_llm_cmd(keyboard_controller, transcript):
     """Process transcript with Ollama and type the response."""
 
     try:
-        loading_indicator.show(message=f"Processing: {transcript}")
+        print(f"Processing: {transcript}")
 
         model = os.getenv("OLLAMA_MODEL", "gemma3:27b")
 
@@ -87,13 +85,12 @@ Your responses will be directly typed into the user's keyboard at their cursor p
                         )
 
                         keyboard_controller.type(normalized_text)
-                        loading_indicator.hide()
 
         return "Successfully processed with Ollama"
     except requests.exceptions.RequestException as e:
         print(f"Error calling Ollama: {e}")
-    finally:
-        loading_indicator.hide()
+    except Exception as e:
+        print(f"Error processing transcript: {e}")
 
 
 def main():
