@@ -1,81 +1,30 @@
-# Vibevoice 🎙️
+# Dictate 🎙️
 
-Hi, I'm [Marc Päpper](https://x.com/mpaepper) and I wanted to vibe code like [Karpathy](https://x.com/karpathy/status/1886192184808149383) ;D, so I looked around and found the cool work of [Vlad](https://github.com/vlad-ds/whisper-keyboard). I extended it to run with a local whisper model, so I don't need to pay for OpenAI tokens.
-I hope you have fun with it!
+Simple voice-to-text dictation for macOS.
 
-## What it does 🚀
+## What it does
 
-![Demo Video](docs/vibevoice-demo-caption.gif)
+Hold right option key, speak, release - your words get transcribed and typed wherever your cursor is.
 
-Simply run `cli.py` and start dictating text anywhere in your system:
-1. Hold down right control key (Ctrl_r)
-2. Speak your text
-3. Release the key
-4. Watch as your spoken words are transcribed and automatically typed!
-
-Works in any application or window - your text editor, browser, chat apps, anywhere you can type!
-
-
-## Installation 🛠️
+## Installation & Usage
 
 ```bash
-git clone https://github.com/mpaepper/vibevoice.git
-cd vibevoice
-pip install -r requirements.txt
-python src/vibevoice/cli.py
+git clone https://github.com/rian-dolphin/dictate.git
+cd dictate
+uv run src/dictate/cli.py
 ```
 
-## Requirements 📋
+Note that if you move the cursor or change windows before transcription completes then it will be pasted wherever the cursor is upon finishing.
 
-### Python Dependencies
-- Python 3.12 or higher
+## Requirements
 
-### System Requirements
-- CUDA-capable GPU (recommended) -> in server.py you can enable cpu use
-- CUDA 12.x
-- cuBLAS
-- cuDNN 9.x
+- uv
+- Apple Silicon Mac
 
+## Configuration
 
-#### macOS Requirements
+You can change the key used for activating by changing `KEY_LABEL` in the `cli.py` file.
 
-* CUDA-capable GPU recommended for best performance
-* For CPU-only mode, modify server.py accordingly
+## Credits
 
-## Usage 💡
-
-1. Start the application:
-```bash
-python src/vibevoice/cli.py
-```
-
-2. Hold down right control key (Ctrl_r) while speaking
-3. Release to transcribe
-4. Your text appears wherever your cursor is!
-
-### Configuration
-
-You can customize various aspects of VibeVoice with the following environment variables:
-
-#### Keyboard Controls
-- `VOICEKEY`: Change the dictation activation key (default: "ctrl_r")
-  ```bash
-  export VOICEKEY="ctrl"  # Use left control instead
-  ```
-
-
-
-## Usage 💡
-
-VibeVoice provides simple dictation:
-
-1. Hold down the dictation key (default: right Control)
-2. Speak your text
-3. Release to transcribe
-4. Your text appears wherever your cursor is!
-
-## Credits 🙏
-
-- Original inspiration: [whisper-keyboard](https://github.com/vlad-ds/whisper-keyboard) by Vlad
-- [Faster Whisper](https://github.com/guillaumekln/faster-whisper) for the optimized Whisper implementation
-- Built by [Marc Päpper](https://www.paepper.com)
+Forked from [VibeVoice](https://github.com/mpaepper/vibevoice), which was based on [whisper-keyboard](https://github.com/vlad-ds/whisper-keyboard) by Vlad, using [Faster Whisper](https://github.com/guillaumekln/faster-whisper).

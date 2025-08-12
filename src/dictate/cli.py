@@ -8,13 +8,9 @@ import time
 import numpy as np
 import requests
 import sounddevice as sd
-
-
-from dotenv import load_dotenv
 from pynput.keyboard import Controller as KeyboardController
 from pynput.keyboard import Key, Listener
 from scipy.io import wavfile
-
 
 
 def start_whisper_server():
@@ -36,14 +32,9 @@ def wait_for_server(timeout=1800, interval=0.5):
     raise TimeoutError("Server failed to start within timeout")
 
 
-
-
-
-
 def main():
-    load_dotenv()
-    key_label = os.environ.get("VOICEKEY", "ctrl_r")
-    RECORD_KEY = Key[key_label]
+    KEY_LABEL = "alt_r"
+    RECORD_KEY = Key[KEY_LABEL]
     #    CMD_KEY = KeyCode(vk=65027)  # This is how you can use non-standard keys, this is AltGr for me
 
     recording = False
@@ -102,7 +93,7 @@ def main():
     try:
         print("Waiting for the server to be ready...")
         wait_for_server()
-        print(f"Dictation is active. Hold down {key_label} to start dictating.")
+        print(f"Dictation is active. Hold down {KEY_LABEL} to start dictating.")
         with Listener(on_press=on_press, on_release=on_release) as listener:
             with sd.InputStream(callback=callback, channels=1, samplerate=sample_rate):
                 listener.join()
