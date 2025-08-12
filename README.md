@@ -15,14 +15,6 @@ Simply run `cli.py` and start dictating text anywhere in your system:
 
 Works in any application or window - your text editor, browser, chat apps, anywhere you can type!
 
-NEW: LLM voice command mode:
-
-1. Hold down the scroll_lock key (I think it's normally not used anymore that's why I chose it)
-2. Speak what you want the LLM to do
-3. The LLM receives your transcribed text
-4. The LLM answer is typed into your keyboard (streamed)
-
-Works everywhere on your system
 
 ## Installation 🛠️
 
@@ -43,18 +35,7 @@ python src/vibevoice/cli.py
 - CUDA 12.x
 - cuBLAS
 - cuDNN 9.x
-- [Ollama](https://ollama.com) for AI command mode
 
-#### Setting up Ollama
-1. Install Ollama by following the instructions at [ollama.com](https://ollama.com)
-2. Pull a model for text processing:
-   ```bash
-   ollama pull gemma3:27b  # Great model which can run on RTX 3090 or similar
-   ```
-3. Make sure Ollama is running in the background:
-   ```bash
-   ollama serve
-   ```
 
 #### macOS Requirements
 
@@ -81,33 +62,17 @@ You can customize various aspects of VibeVoice with the following environment va
   ```bash
   export VOICEKEY="ctrl"  # Use left control instead
   ```
-- `VOICEKEY_CMD`: Set the key for AI command mode (default: "scroll_lock")
-  ```bash
-  export VOICEKEY_CMD="ctsl"  # Use left control instead of Scroll Lock key
-  ```
-
-#### AI Features
-- `OLLAMA_MODEL`: Specify which Ollama model to use (default: "gemma3:27b")
-  ```bash
-  export OLLAMA_MODEL="gemma3:4b"  # Use a smaller model in case you have less GPU RAM
-  ```
 
 
-## Usage Modes 💡
 
-VibeVoice supports two modes:
+## Usage 💡
 
-### 1. Dictation Mode
+VibeVoice provides simple dictation:
+
 1. Hold down the dictation key (default: right Control)
 2. Speak your text
 3. Release to transcribe
 4. Your text appears wherever your cursor is!
-
-### 2. AI Command Mode
-1. Hold down the command key (default: Scroll Lock)
-2. Ask a question or give a command
-3. Release the key
-4. The AI will analyze your request and type a response
 
 ## Credits 🙏
 
