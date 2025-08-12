@@ -7,7 +7,7 @@ from faster_whisper import WhisperModel
 
 app = FastAPI()
 
-model = WhisperModel("large", device="cuda", compute_type="float16")
+model = WhisperModel("large", device="auto", compute_type="default")
 # Enable in case you want to run on CPU, but it's much slower
 #model = WhisperModel("medium", device="cpu", compute_type="int8")
 
