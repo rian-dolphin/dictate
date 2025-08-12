@@ -3,13 +3,12 @@
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
-from faster_whisper import WhisperModel
+import mlx_whisper
 
 app = FastAPI()
 
-model = WhisperModel("large", device="auto", compute_type="default")
-# Enable in case you want to run on CPU, but it's much slower
-#model = WhisperModel("medium", device="cpu", compute_type="int8")
+# MLX Whisper automatically uses Apple Silicon optimization  
+model_name = "mlx-community/whisper-large-v3-mlx"
 
 class TranscribeRequest(BaseModel):
     file_path: str
@@ -20,8 +19,8 @@ def health_check():
 
 @app.post("/transcribe/")
 async def transcribe(request: TranscribeRequest):
-    segments, info = model.transcribe(request.file_path)
-    text = " ".join([segment.text.strip() for segment in segments])
+    result = mlx_whisper.transcribe(request.file_path, path_or_hf_repo=model_name)
+    text = result["text"].strip()
     return {"text": text}
 
 def run_server():
