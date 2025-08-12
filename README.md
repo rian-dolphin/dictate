@@ -6,6 +6,8 @@ Simple voice-to-text dictation for macOS.
 
 Hold right option key, speak, release - your words get transcribed and typed wherever your cursor is.
 
+Note that if you move the cursor or change windows before transcription completes then it will be pasted wherever the cursor is upon finishing.
+
 ## Installation & Usage
 
 ```bash
@@ -13,8 +15,6 @@ git clone https://github.com/rian-dolphin/dictate.git
 cd dictate
 uv run src/dictate/cli.py
 ```
-
-Note that if you move the cursor or change windows before transcription completes then it will be pasted wherever the cursor is upon finishing.
 
 ## Requirements
 
