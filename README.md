@@ -19,10 +19,10 @@ NEW: LLM voice command mode:
 
 1. Hold down the scroll_lock key (I think it's normally not used anymore that's why I chose it)
 2. Speak what you want the LLM to do
-3. The LLM receives your transcribed text and a screenshot of your current view
+3. The LLM receives your transcribed text
 4. The LLM answer is typed into your keyboard (streamed)
 
-Works everywhere on your system and the LLM always has the screen context
+Works everywhere on your system
 
 ## Installation 🛠️
 
@@ -44,11 +44,11 @@ python src/vibevoice/cli.py
 - cuBLAS
 - cuDNN 9.x
 - In case you get this error: `OSError: PortAudio library not found` run `sudo apt install libportaudio2`
-- [Ollama](https://ollama.com) for AI command mode (with multimodal models for screenshot support)
+- [Ollama](https://ollama.com) for AI command mode
 
 #### Setting up Ollama
 1. Install Ollama by following the instructions at [ollama.com](https://ollama.com)
-2. Pull a model that supports both text and images for best results:
+2. Pull a model for text processing:
    ```bash
    ollama pull gemma3:27b  # Great model which can run on RTX 3090 or similar
    ```
@@ -107,25 +107,12 @@ You can customize various aspects of VibeVoice with the following environment va
   export VOICEKEY_CMD="ctsl"  # Use left control instead of Scroll Lock key
   ```
 
-#### AI and Screenshot Features
+#### AI Features
 - `OLLAMA_MODEL`: Specify which Ollama model to use (default: "gemma3:27b")
   ```bash
-  export OLLAMA_MODEL="gemma3:4b"  # Use a smaller VLM in case you have less GPU RAM
-  ```
-- `INCLUDE_SCREENSHOT`: Enable or disable screenshots in AI command mode (default: "true")
-  ```bash
-  export INCLUDE_SCREENSHOT="false"  # Disable screenshots (but they are local only anyways)
-  ```
-- `SCREENSHOT_MAX_WIDTH`: Set the maximum width for screenshots (default: "1024")
-  ```bash
-  export SCREENSHOT_MAX_WIDTH="800"  # Smaller screenshots
+  export OLLAMA_MODEL="gemma3:4b"  # Use a smaller model in case you have less GPU RAM
   ```
 
-#### Screenshot Dependencies
-To use the screenshot functionality:
-```bash
-sudo apt install gnome-screenshot
-```
 
 ## Usage Modes 💡
 
@@ -141,7 +128,7 @@ VibeVoice supports two modes:
 1. Hold down the command key (default: Scroll Lock)
 2. Ask a question or give a command
 3. Release the key
-4. The AI will analyze your request (and current screen if enabled) and type a response
+4. The AI will analyze your request and type a response
 
 ## Credits 🙏
 
